@@ -5,18 +5,33 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
           cache: 'gradle'
-      - run: chmod +x ./gradlew
-      - run: ./gradlew assembleDebug
+
+      - name: gradle-wrapper.jar をダウンロード
+        run: |
+          mkdir -p gradle/wrapper
+          curl -L -o gradle/wrapper/gradle-wrapper.jar \
+            https://github.com/gradle/gradle/raw/v6.7.1/gradle/wrapper/gradle-wrapper.jar
+
+      - name: gradlew に実行権限を付与
+        run: chmod +x ./gradlew
+
+      - name: APK をビルド
+        run: ./gradlew assembleDebug --stacktrace
+
       - uses: actions/upload-artifact@v4
         with:
           name: UsbTetheringApp-debug
